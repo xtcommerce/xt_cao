@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf8"?>
+<xtcommerceplugin>
+  <title>CAO - Faktura API</title>
+  <version>4.3</version>
+  <code>xt_cao</code>
+  <url>http://www.xt-commerce.com</url>
+  <description></description>
+  <icon></icon>
+  <type>ERP</type>
+
+<db_install><![CDATA[
+
+]]></db_install>
+<db_uninstall><![CDATA[
+
+]]></db_uninstall>
+<plugin_code>
+<code>
+<hook>cronjob.php:main</hook>
+<phpcode><![CDATA[
+if ( (isset($_POST['user']) && isset($_POST['password'])) or (isset($_GET['user']) && isset($_GET['password']))) {
+
+if (!isset($xtPlugin->active_modules['xt_cao'])) {
+	die ('plugin not installed/activated');
+}
+$display_output = false;
+ header ("Content-type: text/xml; ");
+ 
+
+include _SRV_WEBROOT.'plugins/xt_cao/classes/class.xt_cao.php';
+$cao_api = new xt_cao;
+// check for credentials
+if (isset($_POST['user']) && isset($_POST['password'])) {
+	$user=$_POST['user'];
+	$pass=$_POST['password'];
+} else {
+	$user=$_GET['user'];
+	$pass=$_GET['password'];
+}
+if (!$cao_api->checkLogin($user,$pass)) {
+	echo $cao_api->loginFailed();
+} else {
+	if (isset($_GET['action'])) {
+		 
+ echo   utf8_encode($cao_api->_GETHandler($_GET['action'],$_GET));
+ 
+	} elseif(isset($_POST['action'])) {
+		echo utf8_encode($cao_api->_POSTHandler($_POST['action'],$_POST));
+		 
+	}
+}
+}
+
+if(XT_CAO_DEBUG == 'true'){
+
+$daten = serialize($_POST)."\n" ;
+			 $datei_handle=fopen( _SRV_WEBROOT."xtLogs/log.txt", "a+");
+			fwrite($datei_handle,$daten);
+			fclose($datei_handle);
+			
+}
+			
+			
+]]></phpcode>
+<order>1</order>
+<active>1</active>
+</code>
+
+
+<code>
+<hook>class.xt_cao.php:_OrdersProducts_bottom</hook>
+<phpcode><![CDATA[
+ 
+ 
+ 
+]]></phpcode>
+<order>1</order>
+<active>0</active>
+</code>
+
+
+<code>
+<hook>class.xt_cao.php:getCustomers_bottom</hook>
+<phpcode><![CDATA[
+ 
+ 
+ 
+]]></phpcode>
+<order>1</order>
+<active>0</active>
+</code>
+
+
+</plugin_code>
+
+<configuration>
+<config>
+<key>XT_CAO_TAX_ID_1</key>
+<type>dropdown</type>
+<url>tax_classes</url>
+<value>1</value>
+<de>
+<title>Steuersatz ID 1</title>
+</de>
+<en>
+<title>Tax Rate ID 1</title>
+</en>
+<es>
+<title>Tipo impositivo ID 1</title>
+</es>
+</config>
+
+<config>
+<key>XT_CAO_TAX_ID_2</key>
+<type>dropdown</type>
+<url>tax_classes</url>
+<value>2</value>
+<de>
+<title>Steuersatz ID 2</title>
+</de>
+<en>
+<title>Tax Rate ID 2</title>
+</en>
+<es>
+<title>Tipo impositivo ID 2</title>
+</es>
+</config>
+
+<config>
+	<key>XT_CAO_DEBUG</key>
+	<type>dropdown</type>
+	<url>conf_truefalse</url>
+	<value>false</value>
+	<sort_order>1</sort_order>
+	<de>
+		<title>Debug Aktivieren</title>
+		<description>Debug Aktivieren</description>
+	</de>
+	<en>
+		<title>Debug Aktivieren</title>
+		<description>Debug Aktivieren</description>
+	</en>
+	
+	<es>
+		<title>Debug Aktivieren</title>
+		<description>Debug Aktivieren</description>
+	</es>
+	 
+</config>
+
+</configuration>
+
+</xtcommerceplugin>

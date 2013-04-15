@@ -1,0 +1,19 @@
+Version 4.13
+
+
+CAO -> Shop - Kunden aktualisieren + Kunden löschen
+Insert Debugger  
+
+
+Version 4.0.0
+
+Features:
+Shop -> CAO
+- Kunden
+- Bestellungen
+- Artikel
+- Hersteller
+- Kategorien
+
+CAO -> Shop
+- Bestellstatus aktualisieren + Bestellstatus mail
