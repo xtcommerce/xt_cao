@@ -40,18 +40,19 @@ include_once _SRV_WEBROOT.'xtFramework/classes/class.MediaGallery.php';
 
 class xt_cao {
 
-	protected $version = '4.410';
+	protected $version = '4.430';
 	protected $version_data = '2013.03.15';
+	var $store_id = '1' ;
 
 	function xt_cao() {
-		global $language,$tax;
+		global $language,$tax,$store_handler;
 
 		$lng = $language->_getLanguageList('store');
 		$this->LNG = array();
 		foreach ($lng as $key => $val) {
 			$this->LNG[$val['code']]=$val;
 		}
-
+		$this->store_id =  $store_handler->shop_id;
 	}
 
     function _logData($arr) {
@@ -249,7 +250,7 @@ class xt_cao {
 	 * @return unknown
 	 */
 	private function _setProducts() {
-		global $language,$tax,$price,$db;
+		global $language,$tax,$price,$db,$seo;
 
 		$_data = array();
 
@@ -262,6 +263,7 @@ class xt_cao {
 		$_data['products_status']=(int)$_POST['products_status'];
 		$_data['manufacturers_id']=$_POST['manufacturers_id'];
 		$_data['products_quantity']=$_POST['products_quantity'];
+		$_data['products_store_id']=$this->store_id;
 		
 
 		// price etc
@@ -287,6 +289,19 @@ class xt_cao {
 			$_data['meta_description_'.$val['code']] = $this->utf8helper($_POST['products_meta_description'][$val['languages_id']]);
 			$_data['meta_keywords_'.$val['code']] = $this->utf8helper($_POST['products_meta_keywords'][$val['languages_id']]);
 			$_data['meta_title_'.$val['code']] = $this->utf8helper($_POST['products_meta_title'][$val['languages_id']]);
+
+			// update seo urls
+			$_seo_data=array();
+
+			//$_seo_data['url_text_'.$val['code']] = str_replace(" ","-",$data['products_name_'.$val['code']]);
+			$_seo_data['url_text_store'.$this->store_id.'_'.$val['code']] = str_replace(" ","-",$data['products_name_store'.$this->store_id.'_'.$val['code']]);
+
+			//$_seo_data['url_text_'.$val['code']] = $seo->filterAutoUrlText($data['url_text_'.$val['code']],$val['code'],'product',$data['products_id']);
+			$_seo_data['url_text_store'.$this->store_id.'_'.$val['code']] = $seo->filterAutoUrlText($data['url_text_store'.$this->store_id.'_'.$val['code']],$val['code'],'product',$data['products_id']);
+
+			$seo->_UpdateRecord('product',$_data['products_id'], $val['code'], $_seo_data,true,"true",$this->store_id);
+			$this->_logData('SEO: product'.$_data['products_id']."-".$val['code']."-" .$this->store_id);
+
 		}
 
 		$obj = new stdClass;
@@ -791,6 +806,7 @@ class xt_cao {
 		$data['manufacturers_name']=$this->utf8helper($_POST['manufacturers_name']);
 		$data['manufacturers_image']=$_POST['manufacturers_image'];
 		$data['manufacturers_status']='1';
+		$data['manufacturers_store_id']=$this->store_id;
 
 		// build lang vars
 		foreach ($language->_getLanguageList() as $key => $val) {
@@ -938,7 +954,7 @@ class xt_cao {
 			return $this->statusXMLTag($status);
 		}
 
-		$sql="REPLACE INTO " . TABLE_PRODUCTS_TO_CATEGORIES . " (products_id, categories_id) Values ('" . $products_id ."', '" . $categories_id . "')";
+		$sql="REPLACE INTO " . TABLE_PRODUCTS_TO_CATEGORIES . " (products_id, categories_id,store_id) Values ('" . $products_id ."', '" . $categories_id . "', '" . $this->store_id . "')";
 		$rs = $db->Execute($sql);
 
 		$status = array();
@@ -977,6 +993,7 @@ class xt_cao {
 		// default
 		$data['parent_id']=$parent_id;
 		$data['categories_id']=$cat_id;
+		$data['categories_status']='1';
 		$data['sort_order']=$_POST['sort'];
 		$data['categories_image']=$this->utf8helper($_POST['image']);
 
@@ -988,12 +1005,15 @@ class xt_cao {
 			$data['meta_description_'.$val['code']] = $this->utf8helper($_POST['categories_meta_description']);
 			$data['meta_keywords_'.$val['code']] = $this->utf8helper($_POST['categories_meta_keywords']);
 			$data['meta_title_'.$val['code']] = $this->utf8helper($_POST['categories_meta_title']);
+			$data['categories_store_id_'.$val['code']] = $this->store_id;
 		}
 
 		$obj = new stdClass;
 		$category = new category;
 
 		$obj = $category->_set($data, $type);
+		// We need to update it again. If we do it not in TABLE_CATEGORIES_DESCRIPTION the categories_id will be 0
+		$obj = $category->_set($data, "edit");
 		if ($obj->success) {
 			$status = array();
 			$status['code']='0';
