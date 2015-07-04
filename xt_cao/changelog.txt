@@ -1,3 +1,9 @@
+Version 4.43 zimbo.boyd@gmail.com
+
+store_id (shop_id) wird verwendet (Die Store_id wurde nie gesetzt )
+Probleme Mit Kategorien beseitigt
+Getestet mit CAO 1.4.177 und xt:Commerce 4.2.0
+
 Version 4.13
 
 
